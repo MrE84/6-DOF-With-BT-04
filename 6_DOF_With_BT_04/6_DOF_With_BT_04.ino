@@ -1,4 +1,4 @@
-create new branch
+//create new branch
 
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
@@ -20,23 +20,12 @@ const int MAX_PULSE_WIDTH = 2500;
 const int DEFAULT_PULSE_WIDTH = 1500;
 const int FREQUENCY = 50;
 const float FREQUENCY_SCALE = (float)FREQUENCY * 4096 / 1000000;
-
-// // Function to calculate pulse width for a given angle
-// int pulseWidth(int angle) {
-//     int pulse_wide = map(angle, 0, 180, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
-//     int analog_value = int(pulse_wide * FREQUENCY_SCALE);
-//     Serial.println(analog_value);
-//     return analog_value;
-// }
-
+const int moveCount = 10;
+const int servoNumber = 6;
 
 int servoAngles[6]; // Global array to hold the angles for all six servos
+int movesServos[moveCount][servoNumber]; //max of 10 moves
 
-// Function to calculate pulse width for a given angle
-int pulseWidth(int angle) {
-    int pulse_wide = map(angle, 0, 180, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
-    return int(pulse_wide * FREQUENCY_SCALE);
-}
 
 // Define buttons and potentiometers
 int leftButton = 7;
@@ -59,13 +48,12 @@ bool isPlay = false;
 int indexRecord = 0;
 
 // Define maximum moves and servos
-const int moveCount = 10;
-const int servoNumber = 6;
 
 
-int movesServos[moveCount][servoNumber]; //max of 10 moves
 
-// Setup function
+
+
+//////////////////// Setup function///////////////////////////////////////////////////////
 void setup() {
     Serial.begin(9600);
     bt1.begin(9600);
@@ -87,12 +75,12 @@ void setup() {
     pwm.setPWMFreq(FREQUENCY);
 
     // Move servo motors to initial positions
-    pwm.setPWM(1,0,pulseWidth(125));
-    pwm.setPWM(2,0,pulseWidth(180));
+    pwm.setPWM(1,0,pulseWidth(135));
+    pwm.setPWM(2,0,pulseWidth(190));
     pwm.setPWM(3,0,pulseWidth(190));
-    pwm.setPWM(4,0,pulseWidth(180));
+    pwm.setPWM(4,0,pulseWidth(200));
     pwm.setPWM(5,0,pulseWidth(190));
-    pwm.setPWM(6,0,pulseWidth(80));
+    pwm.setPWM(6,0,pulseWidth(85));
 
     pinMode(leftButton, INPUT);
     pinMode(rightButton, INPUT);
@@ -107,7 +95,7 @@ void setup() {
 
 
 }
-
+////////////////////////////////////////////////////////////////////////////////////////////////
 // Main loop
 void loop() {
      String command = "";
@@ -127,8 +115,11 @@ void loop() {
     if (command != "") {
         executeCommand(command);
     }
+
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
 // Function to print the pulse widths for the current angles
 void printServoPulseWidths() {
     for (int i = 0; i < 6; i++) {
@@ -142,7 +133,7 @@ void printServoPulseWidths() {
     }
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void MoveToPick() {
     // Define the sequence of angles for each servo in the pick-up motion
     int angles[10][servoNumber] = {
@@ -158,10 +149,7 @@ void MoveToPick() {
         {150, 40, 180, 150, 180, 80}, // OPEN claw to RELEASE the object
         {125, 180, 190, 180, 190, 120}    // Return to initial position with object
     };
-    
-    
-
-    // Execute the sequence
+        // Execute the sequence
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j < servoNumber; j++) {
             pwm.setPWM(j + 1, 0, pulseWidth(angles[i][j]));
@@ -172,19 +160,18 @@ void MoveToPick() {
     // Optionally, open the claw to release the object at the end
     // pwm.setPWM(6, 0, pulseWidth(0)); // Open the claw
 }
-
+/////////////////////////////////////////////////////////////////////////////////////////////////
 void MoveToStart() {
-    pwm.setPWM(1,0,pulseWidth(125));
-    pwm.setPWM(2,0,pulseWidth(180));
+    pwm.setPWM(1,0,pulseWidth(135));
+    pwm.setPWM(2,0,pulseWidth(190));
     pwm.setPWM(3,0,pulseWidth(190));
-    pwm.setPWM(4,0,pulseWidth(180));
+    pwm.setPWM(4,0,pulseWidth(200));
     pwm.setPWM(5,0,pulseWidth(190));
-    pwm.setPWM(6,0,pulseWidth(80));
-    
+    pwm.setPWM(6,0,pulseWidth(85));  
     
     
 }
-
+//////////////////////////////////////////////////////////////////////////////////////////////////
 // Correct the moveServo to use 0-based index for servoAngles array
 void moveServo(int servoChannel, int angle) {
     int servoIndex = servoChannel - 1; // Convert 1-based index to 0-based index
@@ -194,8 +181,12 @@ void moveServo(int servoChannel, int angle) {
     pwm.setPWM(servoChannel, 0, pulseWidth(angle));
 }
 
-
-
+// Function to calculate pulse width for a given angle
+int pulseWidth(int angle) {
+    int pulse_wide = map(angle, 0, 180, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
+    return int(pulse_wide * FREQUENCY_SCALE);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////
 void executeCommand(String command) {
 
    command.trim(); // Trim whitespace
@@ -233,18 +224,6 @@ void executeCommand(String command) {
     }
 
     
-
-    // // Parse and execute other servo commands
-    // for (const auto& cmd : commands) {
-    //     if (command.startsWith(cmd.name)) {
-    //         int angle = command.substring(strlen(cmd.name)).toInt();
-    //         pwm.setPWM(cmd.channel, 0, pulseWidth(angle));
-    //         Serial.println(String(cmd.name) + "moved to " + String(angle) + " degrees");
-    //         return;
-    //     }
-    // }
-    // Corrected usage in executeCommand
-
     // Parse and execute servo commands
     for (const auto& cmd : commands) {
         if (command.startsWith(cmd.name)) {
@@ -255,8 +234,6 @@ void executeCommand(String command) {
             return;
         }
     }
-
-
     // Unknown command
     Serial.println("Unknown command: " + command);
 }
