@@ -1,5 +1,6 @@
 //recording functions and testing
 //LCD updates
+//add are you sure feature
 
 
 #include <Wire.h>
@@ -26,7 +27,8 @@ const int servoNumber = 6;
 
 int servoAngles[6] = {135, 95, 105, 95, 170, 85}; // Initial angles for each servo
 int movesServos[moveCount][servoNumber]; //max of 10 moves
-
+// Global variable to track state
+bool waitingForConfirmation = false;
 bool isRecord = false;
 bool isPlay = false;
 int indexRecord = 0;
@@ -81,26 +83,26 @@ void setup() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Main loop
 void loop() {
-     String command = "";
+    String command = "";
 
-    // Read commands from serial port or Bluetooth module
-    if (Serial.available()) {
-        command = Serial.readStringUntil('\n');
-        command.trim(); // Trim any newline or carriage return characters
-        Serial.println("Received: " + command); // Echo the command back to the serial monitor
-        bt1.println("Received: " + command); // Added line
-    } else if (bt1.available()) {
-        command = bt1.readStringUntil('\n');
-        command.trim(); // Trim any newline or carriage return characters
-        Serial.println("Received via BT: " + command); // Echo the command from BT
-        bt1.println("Received via BT: " + command); // Echo the command from BT
+    if (Serial.available() || bt1.available()) {
+        // Read command from Serial or Bluetooth
+        command = (Serial.available() ? Serial.readStringUntil('\n') : bt1.readStringUntil('\n'));
+        command.trim();
+
+        if (waitingForConfirmation) {
+            if (command.equalsIgnoreCase("YES")) {
+                PlayRecordedMovements();
+            } else {
+                Serial.println("Playback cancelled.");
+                bt1.println("Playback cancelled."); // Send cancellation message over Bluetooth
+            }
+            waitingForConfirmation = false; // Reset the confirmation flag
+        } else {
+            // Process the command normally
+            executeCommand(command);
+        }
     }
-
-    // Execute command if available
-    if (command != "") {
-        executeCommand(command);
-    }
-
 }
 
 /////////////////// Function to start recording servo movements///////////////////////////
@@ -295,7 +297,13 @@ void executeCommand(String command) {
     if (command == "MOVE_TO_PICK") {
         MoveToPick();
         Serial.println("Executing MoveToPick sequence");
-    } else if (command == "GETVALUE") {
+    } else if (command == "PLAY_MOVEMENTS") {
+        waitingForConfirmation = true;
+        Serial.println("Are you sure you want to play movements? (YES/NO)");
+        bt1.println("Are you sure you want to play movements? (YES/NO)"); // Send confirmation request over Bluetooth
+    }
+    
+    else if (command == "GETVALUE") {
         printServoPulseWidths();
     } else if (command == "MOVE_TO_START") {
         MoveToStart();
