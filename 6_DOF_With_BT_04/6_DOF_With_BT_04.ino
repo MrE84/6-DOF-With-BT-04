@@ -86,10 +86,10 @@ void setup() {
    
     // Initialize servoAngles array with predefined angles
     servoAngles[0] = 135;
-    servoAngles[1] = 95;
-    servoAngles[2] = 105;
+    servoAngles[1] = 90;
+    servoAngles[2] = 110;
     servoAngles[3] = 95;
-    servoAngles[4] = 170;
+    servoAngles[4] = 180;
     servoAngles[5] = 85;
 
     // Move servo motors to initial positions based on servoAngles
@@ -240,10 +240,10 @@ void MoveToStart() {
     // servoAngles[4] = 190;
     // servoAngles[5] = 85;
     servoAngles[0] = 135;
-    servoAngles[1] = 95;
-    servoAngles[2] = 105;
+    servoAngles[1] = 90;
+    servoAngles[2] = 110;
     servoAngles[3] = 95;
-    servoAngles[4] = 170;
+    servoAngles[4] = 180;
     servoAngles[5] = 85;
 
     // Use a loop to set each servo to its start position
