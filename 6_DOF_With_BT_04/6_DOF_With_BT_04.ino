@@ -1,5 +1,6 @@
 //recording functions and testing
 //LCD updates
+//Inverse-Kinematics big fail did not get it to work
 
 
 #include <Wire.h>
@@ -20,8 +21,7 @@ const int MAX_PULSE_WIDTH = 2500;
 const int DEFAULT_PULSE_WIDTH = 1500;
 const int FREQUENCY = 50;
 const float FREQUENCY_SCALE = (float)FREQUENCY * 4096 / 1000000;
-// Define maximum moves and servos
-const int moveCount = 10;
+const int moveCount = 10;// Define maximum moves and servos
 const int servoNumber = 6;
 
 int servoAngles[6] = {135, 95, 105, 95, 170, 85}; // Initial angles for each servo
@@ -41,6 +41,118 @@ void moveServo(int servoChannel, int angle);
 void StartRecordingMovements();
 void StopRecordingMovements();
 void PlayRecordedMovements();
+
+
+
+struct Point {
+    float x;
+    float y;
+    float z;
+};
+
+// Define the number of joints, including the end-effector
+const int numJoints = 5; // Adjust if your arm has more joints
+
+// Define the positions of the joints
+Point joints[numJoints];
+// Define the arm's segment lengths
+const float lengths[] = {85, 105, 129, 70}; // Lengths in mm
+
+// Define the positions of the joints (initialized to some starting configuration)
+
+// Define the maximum iterations and tolerance for the IK solution
+const int maxIterations = 10;
+const float tolerance = 1.0; // 1 mm tolerance
+float convertPositionToAngle(Point a, Point b);
+float distanceBetween(Point a, Point b) {
+    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
+}
+
+
+float calculateBaseAngle(Point target) {
+    // Angle in the horizontal plane from the x-axis
+    return atan2(target.y, target.x) * 180 / PI; // Convert to degrees
+}
+
+
+
+float calculatePlanarJointAngle(Point currentJoint, Point nextJoint) {
+    // Project onto the vertical plane and calculate the angle
+    float deltaX = nextJoint.x - currentJoint.x;
+    float deltaZ = nextJoint.z - currentJoint.z; // Assuming Z is up/down axis
+    return atan2(deltaZ, deltaX) * 180 / PI; // Convert to degrees
+}
+
+float calculateWristAngle(Point currentJoint, Point previousJoint) {
+    // Calculate angle based on the relative position to the previous joint
+    float deltaX = currentJoint.x - previousJoint.x;
+    float deltaZ = currentJoint.z - previousJoint.z; // Assuming Z is up/down axis
+    // This may need to account for the previous joint's rotation
+    return atan2(deltaZ, deltaX) * 180 / PI; // Convert to degrees
+}
+
+
+void applyIKSolutionToRobot(Point joints[]) {
+    for (int i = 0; i < numJoints - 1; i++) {
+        float angle = convertPositionToAngle(joints[i], joints[i+1]);
+        moveServo(i + 1, angle);
+    }
+}
+float convertPositionToAngle(Point a, Point b) {
+    // Placeholder calculation
+    // In a real implementation, you'd consider the joint's axis of rotation
+    // and potentially the previous joint's orientation.
+    float deltaY = b.y - a.y;
+    float deltaX = b.x - a.x;
+    float angle = atan2(deltaY, deltaX) * 180 / PI; // Convert from radians to degrees
+    return angle;
+}
+
+
+
+
+// Function to solve IK using FABRIK algorithm
+void solveFABRIK(Point target) {
+  Serial.println("Entered solveFABRIK function");
+  Serial.print("Target X: "); Serial.println(target.x);
+  Serial.print("Target Y: "); Serial.println(target.y);
+  Serial.print("Target Z: "); Serial.println(target.z);
+    Point base = joints[0]; // Remember the original base position
+    int count = 0;
+
+    float distance = distanceBetween(joints[3], target);
+    while (distance > tolerance && count < maxIterations) {
+        // Step 1: Forward reaching
+        joints[4] = target; // Set the end-effector to the target
+        for (int i = 3; i > 0; --i) {
+            float r = distanceBetween(joints[i+1], joints[i]);
+            float lambda = lengths[i] / r;
+            joints[i] = {
+                (1 - lambda) * joints[i+1].x + lambda * joints[i].x,
+                (1 - lambda) * joints[i+1].y + lambda * joints[i].y,
+                (1 - lambda) * joints[i+1].z + lambda * joints[i].z
+            };
+        }
+
+        // Step 2: Backward reaching
+        joints[0] = base; // Set back the base to its original position
+        for (int i = 0; i < 3; ++i) {
+            float r = distanceBetween(joints[i], joints[i+1]);
+            float lambda = lengths[i] / r;
+            joints[i+1] = {
+                (1 - lambda) * joints[i].x + lambda * joints[i+1].x,
+                (1 - lambda) * joints[i].y + lambda * joints[i+1].y,
+                (1 - lambda) * joints[i].z + lambda * joints[i+1].z
+            };
+        }
+
+        distance = distanceBetween(joints[3], target);
+        count++;
+    }
+
+    // Apply the new joint positions to the robot
+   // applyIKSolutionToRobot(joints);
+}
 
 
 //////////////////// Setup function///////////////////////////////////////////////////////
@@ -64,6 +176,9 @@ void setup() {
     pwm.begin();
     pwm.setPWMFreq(FREQUENCY);
 
+    joints[0] = {0, 0, 0}; // Base
+    joints[1] = {0, 85, 0}; // First joint
+    joints[2] = {0, 85 + 105, 0}; // Second joint
    
     // Initialize servoAngles array with predefined angles
     servoAngles[0] = 135;
@@ -101,6 +216,23 @@ void loop() {
 
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+void testFABRIK() {
+    Point target = {100, 100, 100}; // Replace with your target position
+    solveFABRIK(target);
+
+    for (int i = 0; i < numJoints; i++) {
+        Serial.print("Joint ");
+        Serial.print(i);
+        Serial.print(": (");
+        Serial.print(joints[i].x);
+        Serial.print(", ");
+        Serial.print(joints[i].y);
+        Serial.print(", ");
+        Serial.print(joints[i].z);
+        Serial.println(")");
+    }
+}
 /////////////////// Function to start recording servo movements///////////////////////////
 void StartRecordingMovements() {
     isRecord = true;
@@ -267,6 +399,42 @@ void executeCommand(String command) {
         {"WRIST ", 5},
         {"CLAW ", 6}
     };
+
+
+    if (command.startsWith("SOLVE_FABRIK")) {
+      Serial.println("Before SOLVE_FABRIK");
+        // Parse the command to extract target coordinates
+        // For simplicity, let's assume the command format is "SOLVE_FABRIK x,y,z"
+        int firstCommaIndex = command.indexOf(',');
+        int lastCommaIndex = command.lastIndexOf(',');
+        
+        String xStr = command.substring(14, firstCommaIndex); // Extract X coordinate
+        String yStr = command.substring(firstCommaIndex + 1, lastCommaIndex); // Extract Y coordinate
+        String zStr = command.substring(lastCommaIndex + 1); // Extract Z coordinate
+
+        Point target = {
+            xStr.toFloat(),
+            yStr.toFloat(),
+            zStr.toFloat()
+        };
+Serial.println("Before SOLVE_FABRIK");
+        //solveFABRIK(target);
+        
+        // After solving, print the new joint positions
+        for (int i = 0; i < numJoints; i++) {
+            Serial.print("Joint ");
+            Serial.print(i);
+            Serial.print(": (");
+            Serial.print(joints[i].x, 4); // Print x coordinate with 4 decimal places
+            Serial.print(", ");
+            Serial.print(joints[i].y, 4); // Print y coordinate with 4 decimal places
+            Serial.print(", ");
+            Serial.print(joints[i].z, 4); // Print z coordinate with 4 decimal places
+            Serial.println(")");
+        }
+         return;
+
+    }
 
     // Check for special commands first
     if (command == "MOVE_TO_PICK") {
