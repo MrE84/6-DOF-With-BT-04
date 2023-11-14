@@ -1,4 +1,6 @@
 //recording functions and testing
+//LCD updates
+
 
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
@@ -7,10 +9,8 @@
 
 // Initialize LCD display
 LiquidCrystal_I2C lcd(0x27,16,4);
-
 // Initialize servo driver
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
-
 // Initialize Bluetooth module
 SoftwareSerial bt1(2,3); /* (Rx,Tx) */
 
@@ -20,34 +20,17 @@ const int MAX_PULSE_WIDTH = 2500;
 const int DEFAULT_PULSE_WIDTH = 1500;
 const int FREQUENCY = 50;
 const float FREQUENCY_SCALE = (float)FREQUENCY * 4096 / 1000000;
+// Define maximum moves and servos
 const int moveCount = 10;
 const int servoNumber = 6;
 
 int servoAngles[6] = {135, 95, 105, 95, 170, 85}; // Initial angles for each servo
 int movesServos[moveCount][servoNumber]; //max of 10 moves
 
-
-// // Define buttons and potentiometers
-// int leftButton = 7;
-// int rightButton = 8;
-// int potentiometer1 = A0;
-// int potentiometer2 = A1;
-// int potentiometer3 = A2;
-// int potentiometer4 = A3;
-// int potentiometer5 = A4;
-
-// // Define record section
-// int buttonStartRecord = 9;
-// int buttonStopRecord = 10;
-// int buttonPlayRecord = 11;
-// int ledStopRecord = 12;
-// int ledStartRecord = 13;
-
 bool isRecord = false;
 bool isPlay = false;
 int indexRecord = 0;
 
-// Define maximum moves and servos
 // Function Prototypes function must be declared before it is called unless it is defined above the point where it is called.
 int pulseWidth(int angle);
 void executeCommand(String command);
@@ -58,8 +41,6 @@ void moveServo(int servoChannel, int angle);
 void StartRecordingMovements();
 void StopRecordingMovements();
 void PlayRecordedMovements();
-
-
 
 
 //////////////////// Setup function///////////////////////////////////////////////////////
@@ -77,7 +58,7 @@ void setup() {
     lcd.setCursor(0, 1);
     lcd.print("6 DOF ROBOTIC ARM ");
     lcd.setCursor(0, 2);
-    lcd.print("PROTOTYPE 1");
+    lcd.print("PROTOTYPE 4");
 
     // Initialize servo driver
     pwm.begin();
@@ -96,19 +77,6 @@ void setup() {
     for (int i = 0; i < 6; i++) {
         pwm.setPWM(i + 1, 0, pulseWidth(servoAngles[i]));
     }
-
-  //   pinMode(leftButton, INPUT);
-  //   pinMode(rightButton, INPUT);
-
-  // //Record section
-  //   pinMode(buttonStartRecord, INPUT);
-  //   pinMode(buttonStopRecord, INPUT);
-  //   pinMode(buttonPlayRecord, INPUT);
-
-  //   pinMode(ledStartRecord, OUTPUT);
-  //   pinMode(ledStopRecord, OUTPUT);
-
-
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Main loop
@@ -136,8 +104,10 @@ void loop() {
 /////////////////// Function to start recording servo movements///////////////////////////
 void StartRecordingMovements() {
     isRecord = true;
-    indexRecord = 0;  // Reset the index to the beginning
+    indexRecord = 0;
     Serial.println("Recording started.");
+    lcd.clear();
+    lcd.print("Recording..."); // Show recording status on the LCD
 }
 
 /////////////////// Function to stop recording servo movements////////////////////////////////
@@ -151,23 +121,17 @@ void StopRecordingMovements() {
             Serial.print(": Angle "); Serial.println(movesServos[i][j]);
         }
     }
+    lcd.clear();
+    lcd.print("Recorded Moves:"); // Show how many moves were recorded
+    lcd.setCursor(0, 1);
+    lcd.print(indexRecord);
 }
 
-
 /////////////////////Function to play back recorded movements///////////////////////////
-// void PlayRecordedMovements() {
-//     isPlay = true;
-//     for (int i = 0; i <= indexRecord; i++) {  // Assume indexRecord has been updated during recording
-//         for (int j = 0; j < servoNumber; j++) {
-//             pwm.setPWM(j + 1, 0, pulseWidth(movesServos[i][j]));
-//         }
-//         delay(1000);  // Delay between moves, adjust as needed
-//     }
-//     isPlay = false;
-//     Serial.println("Playback completed.");
-// }
 void PlayRecordedMovements() {
     Serial.println("Starting playback...");
+    lcd.clear();
+    lcd.print("Playing Moves..."); // Indicate playback on the LCD
     isPlay = true;
     for (int i = 0; i < indexRecord; i++) {  // Use < indexRecord to play up to the last recorded move
         Serial.print("Move: "); Serial.println(i);
@@ -180,15 +144,18 @@ void PlayRecordedMovements() {
         }
         delay(1000);  // Delay between moves, adjust as needed
     }
+    for (int i = 0; i < indexRecord; i++) {
+        lcd.setCursor(0, 1);
+        lcd.print("Move: ");
+        lcd.print(i + 1); // Update the move number on the LCD
+        // ... rest of the playback code
+    }
+
     isPlay = false;
     Serial.println("Playback completed.");
+    lcd.clear();
+    lcd.print("Playback done."); // Indicate playback is done
 }
-
-
-
-
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Function to print the pulse widths for the current angles
 void printServoPulseWidths() {
@@ -252,7 +219,12 @@ void MoveToStart() {
     }
 
     Serial.println("Moved to start positions.");
+    lcd.clear();
+    lcd.print("Moved to Start"); // Indicate the arm has moved to the start position
+    lcd.setCursor(0, 2);
+    lcd.print("Warning ARM is ready");
 }
+
     
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -347,184 +319,3 @@ void executeCommand(String command) {
         }
     }
 }
-
-
-
-
-
-// void executeCommand(String command) {
-//     command.trim(); // Trim whitespace
-//     command.toUpperCase(); // Convert to upper case for case-insensitive comparison
-
-//     // Define servo commands
-//     struct ServoCommand {
-//         const char* name;
-//         int channel;
-//     };
-
-//     ServoCommand commands[] = {
-//         {"HIP ", 1},
-//         {"WAIST ", 2},
-//         {"SHOULDER ", 3},
-//         {"ELBOW ", 4},
-//         {"WRIST ", 5},
-//         {"CLAW ", 6}
-//     };
-
-//     // Check for special commands first
-//     if (command == "MOVE_TO_PICK") {
-//         MoveToPick();
-//         Serial.println("Executing MoveToPick sequence");
-//     } else if (command == "GETVALUE") {
-//         printServoPulseWidths();
-//     } else if (command == "MOVE_TO_START") {
-//         MoveToStart();
-//         Serial.println("Executing MoveToStart");
-//     } else if (command == "START_RECORD") {
-//         StartRecordingMovements();
-//     } else if (command == "STOP_RECORD") {
-//         StopRecordingMovements();
-//     } else if (command == "PLAY_MOVEMENTS") {
-//         PlayRecordedMovements();
-//     } else {
-//         // Parse and execute servo commands
-//         for (const auto& cmd : commands) {
-//             if (command.startsWith(cmd.name)) {
-//                 int angle = command.substring(strlen(cmd.name)).toInt();
-//                 moveServo(cmd.channel, angle);
-//                 Serial.println(String(cmd.name) + " moved to " + String(angle) + " degrees");
-
-//                 // If we are in recording mode, save this movement
-//                 if (isRecord && indexRecord < moveCount) {
-//                 movesServos[indexRecord][cmd.channel - 1] = angle;  // Store the angle in the recording array
-
-//                   Serial.print("Recording Move "); Serial.print(indexRecord);
-//                   Serial.print(" for Servo "); Serial.print(cmd.channel);
-//                   Serial.print(": Angle "); Serial.println(angle);
-
-//                   indexRecord++;  // Increment the record index
-//               }
-
-
-//                 // Check if the recording array is full
-//                 if (indexRecord >= moveCount) {
-//                     StopRecordingMovements();  // Optional: automatically stop recording if we reach the max count
-//                     Serial.println("Reached max move count, recording stopped.");
-//                 }
-
-//                 return; // Exit the loop after handling the command
-//             }
-//         }
-
-//         // If the command was not recognized
-//         Serial.println("Unknown command: " + command);
-//     }
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// void executeCommand(String command) {
-
-//    command.trim(); // Trim whitespace
-//     command.toUpperCase(); // Convert to upper case for case-insensitive comparison
-
-//     // Define servo commands
-//     struct ServoCommand {
-//         const char* name;
-//         int channel;
-//     };
-
-//     ServoCommand commands[] = {
-//         {"HIP ", 1},
-//         {"WAIST ", 2},
-//         {"SHOULDER ", 3},
-//         {"ELBOW ", 4},
-//         {"WRIST ", 5},
-//         {"CLAW ", 6}
-//     };
-
-//     // Check for the MOVE_TO_PICK command
-//     if (command == "MOVE_TO_PICK") {
-//         MoveToPick();
-//         Serial.println("Executing MoveToPick sequence");
-//         return;
-//     }
-//     if (command == "GETVALUE") {
-//          printServoPulseWidths();
-//          return;
-//     }
-//     if (command == "MOVE_TO_START") {
-//         MoveToStart();
-//         Serial.println("Executing MoveToStart");
-//         return;
-//     }
-//     if (command == "START_RECORD") {
-//         StartRecordingMovements();
-//         return;
-//     } else if (command == "STOP_RECORD") {
-//         StopRecordingMovements();
-//         return;
-//     } else if (command == "PLAY_MOVEMENTS") {
-//         PlayRecordedMovements();
-//         return;
-//     }
-    
-//     // // Parse and execute servo commands
-//     // for (const auto& cmd : commands) {
-//     //     if (command.startsWith(cmd.name)) {
-//     //         int angle = command.substring(strlen(cmd.name)).toInt();
-//     //         // Use the channel directly since moveServo now handles the index conversion
-//     //         moveServo(cmd.channel, angle);
-//     //         Serial.println(String(cmd.name) + "moved to " + String(angle) + " degrees");
-//     //         return;
-//     //     }
-//     // }
-//         // Inside the servo commands loop in executeCommand
-// for (const auto& cmd : commands) {
-//     if (command.startsWith(cmd.name)) {
-//         int angle = command.substring(strlen(cmd.name)).toInt();
-//         moveServo(cmd.channel, angle);
-//         Serial.println(String(cmd.name) + " moved to " + String(angle) + " degrees");
-        
-//         // If we are in recording mode, save this movement
-//         if (isRecord && indexRecord < moveCount) {
-//             movesServos[indexRecord][cmd.channel - 1] = angle;  // Store the angle in the recording array
-//         }
-        
-//         return;
-//     }
-// }
-
-// // After executing a move command, increment the indexRecord if recording
-// if (isRecord) {
-//     indexRecord++;
-//     if (indexRecord >= moveCount) {
-//         StopRecordingMovements();  // Optional: automatically stop recording if we reach the max count
-//         Serial.println("Reached max move count, recording stopped.");
-//     }
-// }
-
-    
-//     // Unknown command
-//     Serial.println("Unknown command: " + command);
-// }
