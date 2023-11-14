@@ -88,6 +88,7 @@ void loop() {
         command = Serial.readStringUntil('\n');
         command.trim(); // Trim any newline or carriage return characters
         Serial.println("Received: " + command); // Echo the command back to the serial monitor
+        bt1.println("Received: " + command); // Added line
     } else if (bt1.available()) {
         command = bt1.readStringUntil('\n');
         command.trim(); // Trim any newline or carriage return characters
@@ -109,17 +110,22 @@ void StartRecordingMovements() {
     Serial.println("Recording started.");
     lcd.clear();
     lcd.print("Recording..."); // Show recording status on the LCD
+    bt1.println("Recording started."); // Adding Bluetooth print
 }
 
 /////////////////// Function to stop recording servo movements////////////////////////////////
 void StopRecordingMovements() {
     isRecord = false;
     Serial.println("Recording stopped. Final recorded moves:");
+    bt1.println("Recording stopped. Final recorded moves:");  // Added
     for (int i = 0; i < indexRecord; i++) {
         Serial.print("Move "); Serial.print(i); Serial.println(":");
+        bt1.print("Move "); bt1.print(i); bt1.println(":");  // Added
         for (int j = 0; j < servoNumber; j++) {
             Serial.print("Servo "); Serial.print(j + 1);
             Serial.print(": Angle "); Serial.println(movesServos[i][j]);
+            bt1.print("Servo "); bt1.print(j + 1);  // Added
+            bt1.print(": Angle "); bt1.println(movesServos[i][j]);  // Added
         }
     }
     lcd.clear();
@@ -131,16 +137,21 @@ void StopRecordingMovements() {
 /////////////////////Function to play back recorded movements///////////////////////////
 void PlayRecordedMovements() {
     Serial.println("Starting playback...");
+    bt1.println("Starting playback...");  // Added
     lcd.clear();
     lcd.print("Playing Moves..."); // Indicate playback on the LCD
     isPlay = true;
-    for (int i = 0; i < indexRecord; i++) {  // Use < indexRecord to play up to the last recorded move
+    for (int i = 0; i < indexRecord; i++) {
         Serial.print("Move: "); Serial.println(i);
+        bt1.print("Move: "); bt1.println(i);  // Added
         for (int j = 0; j < servoNumber; j++) {
             int pulse = pulseWidth(movesServos[i][j]);
             Serial.print("Servo "); Serial.print(j + 1); 
             Serial.print(" Angle: "); Serial.print(movesServos[i][j]);
             Serial.print(" Pulse Width: "); Serial.println(pulse);
+            bt1.print("Servo "); bt1.print(j + 1);  // Added
+            bt1.print(" Angle: "); bt1.print(movesServos[i][j]);  // Added
+            bt1.print(" Pulse Width: "); bt1.println(pulse);  // Added
             pwm.setPWM(j + 1, 0, pulse);
         }
         delay(1000);  // Delay between moves, adjust as needed
@@ -154,6 +165,7 @@ void PlayRecordedMovements() {
 
     isPlay = false;
     Serial.println("Playback completed.");
+    bt1.println("Playback completed.");  // Added
     lcd.clear();
     lcd.print("Playback done."); // Indicate playback is done
 }
@@ -168,6 +180,12 @@ void printServoPulseWidths() {
         Serial.print(servoAngles[i]);
         Serial.print(" Pulse Width: ");
         Serial.println(currentPulseWidth);
+        bt1.print("Servo ");  // Added
+        bt1.print(i);  // Added
+        bt1.print(" Angle: ");  // Added
+        bt1.print(servoAngles[i]);  // Added
+        bt1.print(" Pulse Width: ");  // Added
+        bt1.println(currentPulseWidth);  // Added
     }
 }
 
@@ -218,13 +236,14 @@ void MoveToStart() {
     for (int i = 0; i < 6; i++) {
         pwm.setPWM(i + 1, 0, pulseWidth(servoAngles[i]));
     }
-
     Serial.println("Moved to start positions.");
+    bt1.println("Moved to start positions.");  // Added
     lcd.clear();
     lcd.print("Moved to Start"); // Indicate the arm has moved to the start position
     lcd.setCursor(0, 2);
     lcd.print("Warning ARM is ready");
 }
+
 
     
 
@@ -238,6 +257,9 @@ void moveServo(int servoChannel, int angle) {
     Serial.print("Moving Servo "); Serial.print(servoChannel);
     Serial.print(" to Angle: "); Serial.print(angle);
     Serial.print(" (Pulse Width: "); Serial.print(pulse); Serial.println(")");
+    bt1.print("Moving Servo "); bt1.print(servoChannel);
+    bt1.print(" to Angle: "); bt1.print(angle);
+    bt1.print(" (Pulse Width: "); bt1.print(pulse); bt1.println(")"); // Adding Bluetooth print
 
     pwm.setPWM(servoChannel, 0, pulse);
 }
@@ -289,8 +311,11 @@ void executeCommand(String command) {
             indexRecord++;  // Increment the record index
             Serial.print("Move saved at index ");
             Serial.println(indexRecord);
+            bt1.print("Move saved at index "); // Adding Bluetooth print
+            bt1.println(indexRecord); // Adding Bluetooth print
         } else {
             Serial.println("Cannot save move, either not recording or out of space.");
+            bt1.println("Cannot save move, either not recording or out of space.");
         }
     } else {
         // Parse and execute servo commands
@@ -317,6 +342,7 @@ void executeCommand(String command) {
         if (!isCommandExecuted) {
             // If the command was not recognized
             Serial.println("Unknown command: " + command);
+            bt1.println("Unknown command: " + command); // Adding Bluetooth print
         }
     }
 }
