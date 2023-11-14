@@ -92,6 +92,7 @@ void loop() {
         command = bt1.readStringUntil('\n');
         command.trim(); // Trim any newline or carriage return characters
         Serial.println("Received via BT: " + command); // Echo the command from BT
+        bt1.println("Received via BT: " + command); // Echo the command from BT
     }
 
     // Execute command if available
