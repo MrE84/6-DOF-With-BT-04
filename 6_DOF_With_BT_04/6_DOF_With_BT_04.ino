@@ -1,6 +1,7 @@
 //recording functions and testing
 //LCD updates
-//add are you sure feature
+//add are you sure feature and Initialize movesServos at the Start of Recording:
+
 
 
 #include <Wire.h>
@@ -109,11 +110,22 @@ void loop() {
 void StartRecordingMovements() {
     isRecord = true;
     indexRecord = 0;
+
+    // Initialize movesServos with current servo angles 
+    //the movesServos array is filled with the current angles of each servo. 
+    //This way, if you don't move a particular servo during a recording, it retains its initial angle 
+    for (int i = 0; i < servoNumber; i++) {
+        for (int j = 0; j < moveCount; j++) {
+            movesServos[j][i] = servoAngles[i];
+        }
+    }
+
     Serial.println("Recording started.");
     lcd.clear();
-    lcd.print("Recording..."); // Show recording status on the LCD
-    bt1.println("Recording started."); // Adding Bluetooth print
+    lcd.print("Recording...");
+    bt1.println("Recording started.");
 }
+
 
 /////////////////// Function to stop recording servo movements////////////////////////////////
 void StopRecordingMovements() {
