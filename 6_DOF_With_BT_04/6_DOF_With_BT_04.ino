@@ -28,7 +28,7 @@ const int servoNumber = 6;
 int servoAngles[6] = {135, 95, 105, 95, 170, 85}; // Initial angles for each servo
 int movesServos[moveCount][servoNumber]; //max of 10 moves
 // Global variable to track state
-bool waitingForConfirmation = false;
+bool waitingForConfirmation = false; // safety check, stop user from acidently runing the squence when not ready
 bool isRecord = false;
 bool isPlay = false;
 int indexRecord = 0;
