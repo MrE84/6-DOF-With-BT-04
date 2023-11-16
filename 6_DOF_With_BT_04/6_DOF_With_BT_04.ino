@@ -74,7 +74,7 @@ void setup() {
     servoAngles[2] = 110;
     servoAngles[3] = 95;
     servoAngles[4] = 180;
-    servoAngles[5] = 85;
+    servoAngles[5] = 0;
 
     // Move servo motors to initial positions based on servoAngles
     for (int i = 0; i < 6; i++) {
@@ -208,16 +208,16 @@ void MoveToPick() {
     // Define the sequence of angles for each servo in the pick-up motion
     int angles[10][servoNumber] = {
         // HIP, WAIST, SHOULDER, ELBOW, WRIST, CLAW
-        {125, 180, 190, 180, 190, 80},    // Initial position
-        {150, 110, 100, 190, 90, 80}, // Move to above the object
-        {150, 50, 180, 150, 180, 80}, // Lower towards the object
-        {150, 50, 180, 150, 180, 140},// Close claw to grab the object
-        {150, 90, 100, 150, 90, 140},// Lift the object
-        {125, 180, 190, 180, 190, 120},    // Return to initial position with object
-        {150, 110, 100, 190, 90, 80}, // Move the object
-        {150, 40, 180, 150, 180, 80}, // Lower  the object
-        {150, 40, 180, 150, 180, 80}, // OPEN claw to RELEASE the object
-        {125, 180, 190, 180, 190, 120}    // Return to initial position with object
+        {125, 180, 190, 180, 190, 0},    // Initial position
+        {150, 110, 100, 190, 90, 0}, // Move to above the object
+        {150, 50, 180, 150, 180, 0}, // Lower towards the object
+        {150, 50, 180, 150, 180, 0},// Close claw to grab the object
+        {150, 90, 100, 150, 90, 0},// Lift the object
+        {125, 180, 190, 180, 190, 0},    // Return to initial position with object
+        {150, 110, 100, 190, 90, 0}, // Move the object
+        {150, 40, 180, 150, 180, 0}, // Lower  the object
+        {150, 40, 180, 150, 180, 0}, // OPEN claw to RELEASE the object
+        {125, 180, 190, 180, 190, 0}    // Return to initial position with object
     };
         // Execute the sequence
     for (int i = 0; i < 10; i++) {
@@ -238,13 +238,13 @@ void MoveToStart() {
     // servoAngles[2] = 205;
     // servoAngles[3] = 200;
     // servoAngles[4] = 190;
-    // servoAngles[5] = 85;
+    // servoAngles[5] = 0;
     servoAngles[0] = 135;
     servoAngles[1] = 90;
     servoAngles[2] = 110;
     servoAngles[3] = 95;
     servoAngles[4] = 180;
-    servoAngles[5] = 85;
+    servoAngles[5] = 0;
 
     // Use a loop to set each servo to its start position
     for (int i = 0; i < 6; i++) {
