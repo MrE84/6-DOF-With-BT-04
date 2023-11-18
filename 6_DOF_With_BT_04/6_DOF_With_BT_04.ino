@@ -69,7 +69,7 @@ void setup() {
 
    
     // Initialize servoAngles array with predefined angles
-    servoAngles[0] = 135;
+    servoAngles[0] = 100;
     servoAngles[1] = 90;
     servoAngles[2] = 110;
     servoAngles[3] = 95;
@@ -239,9 +239,9 @@ void MoveToStart() {
     // servoAngles[3] = 200;
     // servoAngles[4] = 190;
     // servoAngles[5] = 0;
-    servoAngles[0] = 135;
+    servoAngles[0] = 100;
     servoAngles[1] = 90;
-    servoAngles[2] = 110;
+    servoAngles[2] = 10;
     servoAngles[3] = 95;
     servoAngles[4] = 180;
     servoAngles[5] = 0;
