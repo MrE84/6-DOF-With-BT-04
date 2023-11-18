@@ -1,6 +1,7 @@
 //recording functions and testing
 //LCD updates
 //add are you sure feature and Initialize movesServos at the Start of Recording:
+// speed control
 
 
 
@@ -26,13 +27,20 @@ const float FREQUENCY_SCALE = (float)FREQUENCY * 4096 / 1000000;
 const int moveCount = 10;
 const int servoNumber = 6;
 
-int servoAngles[6] = {135, 95, 105, 95, 170, 85}; // Initial angles for each servo
+int servoAngles[6] = {100, 90, 110, 90, 180, 0}; // Initial angles for each servo
 int movesServos[moveCount][servoNumber]; //max of 10 moves
 // Global variable to track state
 bool waitingForConfirmation = false; // safety check, stop user from acidently runing the squence when not ready
 bool isRecord = false;
 bool isPlay = false;
 int indexRecord = 0;
+
+// Speed control variables
+int servoSpeed = 10; // Default speed value
+unsigned long previousMillis[servoNumber]; // Last time servo was updated
+int currentServoPositions[servoNumber]; // Current positions of servos
+// Global variable to store the interval for non-blocking delays
+unsigned long interval = 1000; // Interval at which to move servo (milliseconds)
 
 // Function Prototypes function must be declared before it is called unless it is defined above the point where it is called.
 int pulseWidth(int angle);
@@ -104,7 +112,29 @@ void loop() {
             executeCommand(command);
         }
     }
-}
+    // Non-blocking servo movement
+    unsigned long currentMillis = millis();
+    for (int i = 0; i < servoNumber; i++) {
+        if (currentMillis - previousMillis[i] >= servoSpeed) {
+            previousMillis[i] = currentMillis;
+            if (currentServoPositions[i] != servoAngles[i]) {
+                if (currentServoPositions[i] < servoAngles[i]) {
+                    currentServoPositions[i]++;
+                } else {
+                    currentServoPositions[i]--;
+                }
+                int pulse = pulseWidth(currentServoPositions[i]);
+                pwm.setPWM(i, 0, pulse);  // Updated line
+            }
+        }
+    }
+  }
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 
 /////////////////// Function to start recording servo movements///////////////////////////
 void StartRecordingMovements() {
@@ -155,6 +185,19 @@ void PlayRecordedMovements() {
     lcd.clear();
     lcd.print("Playing Moves..."); // Indicate playback on the LCD
     isPlay = true;
+
+    unsigned long previousMillis = 0; // Stores the last time a move was executed
+    for (int i = 0; i < indexRecord; i++) {
+        unsigned long currentMillis = millis();
+        if (currentMillis - previousMillis >= interval) {
+            previousMillis = currentMillis; // Update the last execution time
+
+            // Execute the movement
+            for (int j = 0; j < servoNumber; j++) {
+                int pulse = pulseWidth(movesServos[i][j]);
+                pwm.setPWM(j + 1, 0, pulse);
+            }
+
     for (int i = 0; i < indexRecord; i++) {
         Serial.print("Move: "); Serial.println(i);
         bt1.print("Move: "); bt1.println(i);  // Added
@@ -182,6 +225,9 @@ void PlayRecordedMovements() {
     bt1.println("Playback completed.");  // Added
     lcd.clear();
     lcd.print("Playback done."); // Indicate playback is done
+        }
+    }
+
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Function to print the pulse widths for the current angles
@@ -241,7 +287,7 @@ void MoveToStart() {
     // servoAngles[5] = 0;
     servoAngles[0] = 100;
     servoAngles[1] = 90;
-    servoAngles[2] = 10;
+    servoAngles[2] = 110;
     servoAngles[3] = 95;
     servoAngles[4] = 180;
     servoAngles[5] = 0;
@@ -326,6 +372,11 @@ void executeCommand(String command) {
         StopRecordingMovements();
     } else if (command == "PLAY_MOVEMENTS") {
         PlayRecordedMovements();
+    } else if (command == "SET_SPEED") {
+        int newSpeed = command.substring(10).toInt();
+    servoSpeed = newSpeed;
+    interval = map(servoSpeed, 1, 10, 1000, 100); // Map speed value to interval (adjust range as needed)
+
     } else if (command == "SAVE_MOVE") {  // New command to increment indexRecord
         if (isRecord && indexRecord < moveCount - 1) {
             indexRecord++;  // Increment the record index
