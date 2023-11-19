@@ -26,7 +26,7 @@ const float FREQUENCY_SCALE = (float)FREQUENCY * 4096 / 1000000;
 const int moveCount = 10;
 const int servoNumber = 6;
 
-int servoAngles[6] = {135, 95, 105, 95, 170, 85}; // Initial angles for each servo
+int servoAngles[6] = {100, 90, 110, 95, 180, 0}; // Initial angles for each servo
 int movesServos[moveCount][servoNumber]; //max of 10 moves
 // Global variable to track state
 bool waitingForConfirmation = false; // safety check, stop user from acidently runing the squence when not ready
@@ -55,7 +55,6 @@ void setup() {
     lcd.init();
     lcd.backlight();
     lcd.clear();
-    lcd.begin(16, 4);      // set up the LCD's number of columns and rows
     lcd.setCursor(0, 0);
     lcd.print("2023 GDIP F1 :");
     lcd.setCursor(0, 1);
