@@ -16,6 +16,7 @@ LiquidCrystal_I2C lcd(0x27,16,4);
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 // Initialize Bluetooth module
 SoftwareSerial bt1(2,3); /* (Rx,Tx) */
+//SoftwareSerial bt1(7,6); /* (Rx,Tx)  for Jakes PCB*/
 
 // Define servo motor parameters
 const int MIN_PULSE_WIDTH = 500;
@@ -329,7 +330,20 @@ void executeCommand(String command) {
         Serial.println("Are you sure you want to play movements? (YES/NO)");
         bt1.println("Are you sure you want to play movements? (YES/NO)"); // Send confirmation request over Bluetooth
     }
-    
+    else if (command.startsWith("SPEED ")) {
+        String speedValueString = command.substring(6); // Extract the part of the string after "SPEED "
+        int newSpeed = speedValueString.toInt(); // Convert the extracted part to an integer
+        if(newSpeed > 0) { // Optionally check if the new speed is a positive number
+            speed = newSpeed; // Update the global speed variable
+
+            // Optional: Acknowledge the speed change
+            Serial.print("Speed updated to: ");
+            Serial.println(speed);
+        } else {
+            // Handle invalid speed value
+            Serial.println("Invalid speed value");
+        }
+    }
     else if (command == "GETVALUE") {
         printServoPulseWidths();
     } else if (command == "MOVE_TO_START") {
