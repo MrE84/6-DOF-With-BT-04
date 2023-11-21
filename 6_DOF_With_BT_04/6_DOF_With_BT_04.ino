@@ -38,7 +38,7 @@ int indexRecord = 0;
 int pulseWidth(int angle);
 void executeCommand(String command);
 void printServoPulseWidths();
-void MoveToPick();
+//void MoveToPick();
 void MoveToStart();
 void moveServo(int servoChannel, int angle);
 void StartRecordingMovements();
@@ -299,10 +299,11 @@ void executeCommand(String command) {
     };
 
     // Check for special commands first
-    if (command == "MOVE_TO_PICK") {
-        MoveToPick();
-        Serial.println("Executing MoveToPick sequence");
-    } else if (command == "PLAY_MOVEMENTS") {
+    // if (command == "MOVE_TO_PICK") {
+    //     MoveToPick();
+    //     Serial.println("Executing MoveToPick sequence");
+    // } else 
+    if (command == "PLAY_MOVEMENTS") {
         waitingForConfirmation = true;
         Serial.println("Are you sure you want to play movements? (YES/NO)");
         bt1.println("Are you sure you want to play movements? (YES/NO)"); // Send confirmation request over Bluetooth
