@@ -1,6 +1,7 @@
 //recording functions and testing
 //LCD updates
 //add are you sure feature and Initialize movesServos at the Start of Recording:
+// speed control added
 
 
 
