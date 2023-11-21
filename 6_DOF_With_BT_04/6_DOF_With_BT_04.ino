@@ -203,47 +203,41 @@ void printServoPulseWidths() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void MoveToPick() {
-    // Define the sequence of angles for each servo in the pick-up motion
-    int angles[10][servoNumber] = {
-        // HIP, WAIST, SHOULDER, ELBOW, WRIST, CLAW
-        {125, 180, 190, 180, 190, 0},    // Initial position
-        {150, 110, 100, 190, 90, 0}, // Move to above the object
-        {150, 50, 180, 150, 180, 0}, // Lower towards the object
-        {150, 50, 180, 150, 180, 0},// Close claw to grab the object
-        {150, 90, 100, 150, 90, 0},// Lift the object
-        {125, 180, 190, 180, 190, 0},    // Return to initial position with object
-        {150, 110, 100, 190, 90, 0}, // Move the object
-        {150, 40, 180, 150, 180, 0}, // Lower  the object
-        {150, 40, 180, 150, 180, 0}, // OPEN claw to RELEASE the object
-        {125, 180, 190, 180, 190, 0}    // Return to initial position with object
-    };
-        // Execute the sequence
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < servoNumber; j++) {
-            pwm.setPWM(j + 1, 0, pulseWidth(angles[i][j]));
-        }
-        delay(2000); // Wait for 1 second between each step for smooth movement
-    }
+// void MoveToPick() {
+//     // Define the sequence of angles for each servo in the pick-up motion
+//     int angles[10][servoNumber] = {
+//         // HIP, WAIST, SHOULDER, ELBOW, WRIST, CLAW
+//         {125, 180, 190, 180, 190, 0},    // Initial position
+//         {150, 110, 100, 190, 90, 0}, // Move to above the object
+//         {150, 50, 180, 150, 180, 0}, // Lower towards the object
+//         {150, 50, 180, 150, 180, 0},// Close claw to grab the object
+//         {150, 90, 100, 150, 90, 0},// Lift the object
+//         {125, 180, 190, 180, 190, 0},    // Return to initial position with object
+//         {150, 110, 100, 190, 90, 0}, // Move the object
+//         {150, 40, 180, 150, 180, 0}, // Lower  the object
+//         {150, 40, 180, 150, 180, 0}, // OPEN claw to RELEASE the object
+//         {125, 180, 190, 180, 190, 0}    // Return to initial position with object
+//     };
+//         // Execute the sequence
+//     for (int i = 0; i < 10; i++) {
+//         for (int j = 0; j < servoNumber; j++) {
+//             pwm.setPWM(j + 1, 0, pulseWidth(angles[i][j]));
+//         }
+//         delay(2000); // Wait for 1 second between each step for smooth movement
+//     }
 
-    // Optionally, open the claw to release the object at the end
-    // pwm.setPWM(6, 0, pulseWidth(0)); // Open the claw
-}
+//     // Optionally, open the claw to release the object at the end
+//     // pwm.setPWM(6, 0, pulseWidth(0)); // Open the claw
+// }
 /////////////////////////////////////////////////////////////////////////////////////////////////
 void MoveToStart() {
-    // Update the servoAngles array with the start positions
-    // servoAngles[0] = 135;
-    // servoAngles[1] = 190;
-    // servoAngles[2] = 205;
-    // servoAngles[3] = 200;
-    // servoAngles[4] = 190;
-    // servoAngles[5] = 0;
-    servoAngles[0] = 100;
-    servoAngles[1] = 90;
-    servoAngles[2] = 10;
-    servoAngles[3] = 95;
-    servoAngles[4] = 180;
-    servoAngles[5] = 0;
+    
+    servoAngles[0] = 100; //HIP servo
+    servoAngles[1] = 90;  //WAIST servo
+    servoAngles[2] = 10;  //SHOUDLER servo
+    servoAngles[3] = 95;  //ELBOW servo
+    servoAngles[4] = 180; //WRIST servo
+    servoAngles[5] = 0;   //CLAW servo
 
     // Use a loop to set each servo to its start position
     for (int i = 0; i < 6; i++) {
