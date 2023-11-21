@@ -34,6 +34,8 @@ bool isRecord = false;
 bool isPlay = false;
 int indexRecord = 0;
 
+int speed = 10; // set the speed (delay) of movment
+
 // Function Prototypes function must be declared before it is called unless it is defined above the point where it is called.
 int pulseWidth(int angle);
 void executeCommand(String command);
@@ -256,27 +258,45 @@ void MoveToStart() {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Correct the moveServo to use 0-based index for servoAngles array
-void moveServo(int servoChannel, int angle) {
+void moveServo(int servoChannel, int targetAngle) {
     int servoIndex = servoChannel - 1; // Convert 1-based index to 0-based index
-    servoAngles[servoIndex] = angle;
-    int pulse = pulseWidth(angle);
+    
+    // Get current angle
+    int currentAngle = servoAngles[servoIndex];
 
-    Serial.print("Moving Servo "); Serial.print(servoChannel);
-    Serial.print(" to Angle: "); Serial.print(angle);
-    Serial.print(" (Pulse Width: "); Serial.print(pulse); Serial.println(")");
-    bt1.print("Moving Servo "); bt1.print(servoChannel);
-    bt1.print(" to Angle: "); bt1.print(angle);
-    bt1.print(" (Pulse Width: "); bt1.print(pulse); bt1.println(")"); // Adding Bluetooth print
+    // Determine the direction of movement
+    int stepSize = 5; // Define your step size here
+    int step = (currentAngle < targetAngle) ? stepSize : -stepSize;
 
-    pwm.setPWM(servoChannel, 0, pulse);
+    // Gradually move the servo from its current angle to the target angle
+    for (int angle = currentAngle; angle != targetAngle; angle += step) {
+        servoAngles[servoIndex] = angle;
+        int pulse = pulseWidth(angle);
+
+        // Debug information
+        Serial.print("Moving Servo "); Serial.print(servoChannel);
+        Serial.print(" to Angle: "); Serial.print(angle);
+        Serial.print(" (Pulse Width: "); Serial.print(pulse); Serial.println(")");
+
+        // Bluetooth information
+        bt1.print("Moving Servo "); bt1.print(servoChannel);
+        bt1.print(" to Angle: "); bt1.print(angle);
+        bt1.print(" (Pulse Width: "); bt1.print(pulse); bt1.println(")");
+
+        // Set the servo position
+        pwm.setPWM(servoChannel, 0, pulse);
+
+        // Delay to control the speed
+        delay(speed);
+    }
 }
 
-
-// Function to calculate pulse width for a given angle
+// Function to calculate pulse width for a given angle remains the same
 int pulseWidth(int angle) {
     int pulse_wide = map(angle, 0, 180, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
     return int(pulse_wide * FREQUENCY_SCALE);
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 void executeCommand(String command) {
