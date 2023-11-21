@@ -323,8 +323,6 @@ void executeCommand(String command) {
         StartRecordingMovements();
     } else if (command == "STOP_RECORD") {
         StopRecordingMovements();
-    } else if (command == "PLAY_MOVEMENTS") {
-        PlayRecordedMovements();
     } else if (command == "SAVE_MOVE") {  // New command to increment indexRecord
         if (isRecord && indexRecord < moveCount - 1) {
             indexRecord++;  // Increment the record index
