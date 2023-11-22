@@ -25,7 +25,7 @@ const int DEFAULT_PULSE_WIDTH = 1500;
 const int FREQUENCY = 50;
 const float FREQUENCY_SCALE = (float)FREQUENCY * 4096 / 1000000;
 // Define maximum moves and servos
-const int moveCount = 10;
+const int moveCount = 20;
 const int servoNumber = 6;
 
 int servoAngles[6] = {100, 90, 110, 95, 180, 0}; // Initial angles for each servo
@@ -71,13 +71,13 @@ void setup() {
     pwm.setPWMFreq(FREQUENCY);
 
    
-    // Initialize servoAngles array with predefined angles
-    servoAngles[0] = 100;
-    servoAngles[1] = 90;
-    servoAngles[2] = 110;
-    servoAngles[3] = 95;
-    servoAngles[4] = 180;
-    servoAngles[5] = 0;
+    // // Initialize servoAngles array with predefined angles
+    // servoAngles[0] = 100;
+    // servoAngles[1] = 90;
+    // servoAngles[2] = 110;
+    // servoAngles[3] = 95;
+    // servoAngles[4] = 180;
+    // servoAngles[5] = 0;
 
     // Move servo motors to initial positions based on servoAngles
     for (int i = 0; i < 6; i++) {
@@ -235,7 +235,11 @@ void printServoPulseWidths() {
 // }
 /////////////////////////////////////////////////////////////////////////////////////////////////
 void MoveToStart() {
-    
+
+  
+     for (int i = 0; i < 6; i++) {
+        moveServo(i + 1, servoAngles[i]);
+    }
     servoAngles[0] = 100; //HIP servo
     servoAngles[1] = 90;  //WAIST servo
     servoAngles[2] = 10;  //SHOUDLER servo
@@ -243,46 +247,52 @@ void MoveToStart() {
     servoAngles[4] = 180; //WRIST servo
     servoAngles[5] = 0;   //CLAW servo
 
-    // Use a loop to set each servo to its start position
-    for (int i = 0; i < 6; i++) {
-        pwm.setPWM(i + 1, 0, pulseWidth(servoAngles[i]));
-    }
+    // Use a loop to set each servo to its start position using moveServo
+   
     Serial.println("Moved to start positions.");
     bt1.println("Moved to start positions.");  // Added
     lcd.clear();
     lcd.print("Moved to Start"); // Indicate the arm has moved to the start position
     lcd.setCursor(0, 2);
     lcd.print("Warning ARM is ready");
-}
-
-
-    
-
+}   
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //Correct the moveServo to use 0-based index for servoAngles array
 void moveServo(int servoChannel, int targetAngle) {
+        if (targetAngle < 0 || targetAngle > 180) {
+        Serial.println("Error: Target angle out of range (0-180 degrees).");
+        return; // Exit the function without moving the servo
+    }
+
     int servoIndex = servoChannel - 1; // Convert 1-based index to 0-based index
     
     // Get current angle
     int currentAngle = servoAngles[servoIndex];
 
-    // Determine the direction of movement
-    int stepSize = 1; // Define your step size here
+    int stepSize = 5; // Define your step size here
     int step = (currentAngle < targetAngle) ? stepSize : -stepSize;
 
     // Gradually move the servo from its current angle to the target angle
-    for (int angle = currentAngle; angle != targetAngle; angle += step) {
-        servoAngles[servoIndex] = angle;
-        int pulse = pulseWidth(angle);
+    while (true) {
+        // Check if the next step will overshoot the target
+        if ((step > 0 && currentAngle + step > targetAngle) || 
+            (step < 0 && currentAngle + step < targetAngle)) {
+            currentAngle = targetAngle; // Set to target angle to prevent overshoot
+        } else {
+            currentAngle += step; // Move to the next step
+        }
+
+        servoAngles[servoIndex] = currentAngle;
+        int pulse = pulseWidth(currentAngle);
 
         // Debug information
         Serial.print("Moving Servo "); Serial.print(servoChannel);
-        Serial.print(" to Angle: "); Serial.print(angle);
+        Serial.print(" to Angle: "); Serial.print(currentAngle);
         Serial.print(" (Pulse Width: "); Serial.print(pulse); Serial.println(")");
 
         // Bluetooth information
         bt1.print("Moving Servo "); bt1.print(servoChannel);
-        bt1.print(" to Angle: "); bt1.print(angle);
+        bt1.print(" to Angle: "); bt1.print(currentAngle);
         bt1.print(" (Pulse Width: "); bt1.print(pulse); bt1.println(")");
 
         // Set the servo position
@@ -290,63 +300,19 @@ void moveServo(int servoChannel, int targetAngle) {
 
         // Delay to control the speed
         delay(speed);
+
+        // Break out of the loop once the target angle is reached
+        if (currentAngle == targetAngle) {
+            break;
+        }
     }
 }
-
+/////////////////////////////////////////////////////////////////////////////////////////////////
 // Function to calculate pulse width for a given angle remains the same
 int pulseWidth(int angle) {
     int pulse_wide = map(angle, 0, 180, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
     return int(pulse_wide * FREQUENCY_SCALE);
  }
-// void moveServo(int servoChannel, int targetAngle) {
-//     // Validate target angle
-//     if (targetAngle < 0 || targetAngle > 180) {
-//         Serial.println("Invalid angle. Angle must be between 0 and 180.");
-//         return; // Exit the function
-//     }
-
-//     int servoIndex = servoChannel - 1; // Convert 1-based index to 0-based index
-    
-//     // Get current angle
-//     int currentAngle = servoAngles[servoIndex];
-
-//     // Determine the direction of movement
-//     int stepSize = 2; // Define your step size here
-//     int step = (currentAngle < targetAngle) ? stepSize : -stepSize;
-
-//     // Gradually move the servo from its current angle to the target angle
-//     for (int angle = currentAngle; angle != targetAngle; angle += step) {
-//         // Adjust if overshooting due to step size
-//         if ((step > 0 && angle > targetAngle) || (step < 0 && angle < targetAngle)) {
-//             angle = targetAngle;
-//         }
-
-//         servoAngles[servoIndex] = angle;
-//         int pulse = pulseWidth(angle);
-
-//         // Debug information
-//         Serial.print("Moving Servo "); Serial.print(servoChannel);
-//         Serial.print(" to Angle: "); Serial.print(angle);
-//         Serial.print(" (Pulse Width: "); Serial.print(pulse); Serial.println(")");
-
-//         // Bluetooth information
-//         bt1.print("Moving Servo "); bt1.print(servoChannel);
-//         bt1.print(" to Angle: "); bt1.print(angle);
-//         bt1.print(" (Pulse Width: "); bt1.print(pulse); bt1.println(")");
-
-//         // Set the servo position
-//         pwm.setPWM(servoChannel, 0, pulse);
-
-//         // Delay to control the speed
-//         delay(speed);
-//     }
-// }
-
-// // Function to calculate pulse width for a given angle remains the same
-// int pulseWidth(int angle) {
-//     int pulse_wide = map(angle, 0, 180, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
-//     return int(pulse_wide * FREQUENCY_SCALE);
-// }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
