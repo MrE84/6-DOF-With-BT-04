@@ -169,7 +169,7 @@ void PlayRecordedMovements() {
             bt1.print("Servo "); bt1.print(j + 1);  // Added
             bt1.print(" Angle: "); bt1.print(movesServos[i][j]);  // Added
             bt1.print(" Pulse Width: "); bt1.println(pulse);  // Added
-            pwm.setPWM(j + 1, 0, pulse);
+            moveServo(j + 1, movesServos[i][j]);
         }
         delay(1000);  // Delay between moves, adjust as needed
     }
@@ -267,7 +267,7 @@ void moveServo(int servoChannel, int targetAngle) {
     int currentAngle = servoAngles[servoIndex];
 
     // Determine the direction of movement
-    int stepSize = 4; // Define your step size here
+    int stepSize = 1; // Define your step size here
     int step = (currentAngle < targetAngle) ? stepSize : -stepSize;
 
     // Gradually move the servo from its current angle to the target angle
