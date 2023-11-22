@@ -236,7 +236,7 @@ void printServoPulseWidths() {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 void MoveToStart() {
 
-  
+
      for (int i = 0; i < 6; i++) {
         moveServo(i + 1, servoAngles[i]);
     }
@@ -269,7 +269,7 @@ void moveServo(int servoChannel, int targetAngle) {
     // Get current angle
     int currentAngle = servoAngles[servoIndex];
 
-    int stepSize = 5; // Define your step size here
+    int stepSize = 8; // Define your step size here
     int step = (currentAngle < targetAngle) ? stepSize : -stepSize;
 
     // Gradually move the servo from its current angle to the target angle
