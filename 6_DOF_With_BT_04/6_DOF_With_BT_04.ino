@@ -4,7 +4,7 @@
 // speed control added and working on play back
 
 
-
+#include <EEPROM.h>
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 #include <SoftwareSerial.h>
@@ -25,8 +25,11 @@ const int DEFAULT_PULSE_WIDTH = 1500;
 const int FREQUENCY = 50;
 const float FREQUENCY_SCALE = (float)FREQUENCY * 4096 / 1000000;
 // Define maximum moves and servos
-const int moveCount = 20;
-const int servoNumber = 6;
+ const int moveCount = 20;
+ const int servoNumber = 6;
+const int totalMoves = 20;  // Adjust as needed
+const int bytesPerMove = 6;  // Assuming each move takes up 6 bytes
+
 
 int servoAngles[6] = {100, 90, 110, 95, 180, 0}; // Initial angles for each servo
 int movesServos[moveCount][servoNumber]; //max of 10 moves
@@ -48,7 +51,9 @@ void moveServo(int servoChannel, int angle);
 void StartRecordingMovements();
 void StopRecordingMovements();
 void PlayRecordedMovements();
-
+void WriteMoveToEEPROM(int moveIndex, int servoAngles[]);
+void DeleteRecordedMoves(int moveIndex);
+void DeleteAllMoves();
 
 //////////////////// Setup function///////////////////////////////////////////////////////
 void setup() {
@@ -69,6 +74,15 @@ void setup() {
     // Initialize servo driver
     pwm.begin();
     pwm.setPWMFreq(FREQUENCY);
+
+    indexRecord = EEPROM.read(0); // Read the stored indexRecord from EEPROM
+    // Check if EEPROM is initialized
+    if (EEPROM.read(0) == 255) { // 255 can indicate uninitialized EEPROM
+        EEPROM.write(0, 0); // Initialize indexRecord to 0
+        DeleteAllMoves(); // Clear all servo positions in EEPROM
+    } else {
+        indexRecord = EEPROM.read(0);
+    }
 
    
     // // Initialize servoAngles array with predefined angles
@@ -109,14 +123,37 @@ void loop() {
     }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////
+void WriteMoveToEEPROM(int moveIndex, int servoAngles[]) {
+    int startAddress = moveIndex * bytesPerMove;
+    for (int i = 0; i < 6; i++) {
+        EEPROM.write(startAddress + i, servoAngles[i]);
+    }
+}
+///////////////////////////////////////////////////////////////////////////////////////
+void DeleteRecordedMoves(int moveIndex) {
+    int startAddress = moveIndex * bytesPerMove;
+    for (int i = 0; i < 6; i++) {
+        EEPROM.write(startAddress + i, 0);
+    }
+}
+/////////////////////////////////////////////////////////////////////////////////////
+void DeleteAllMoves() {
+    for (int moveIndex = 0; moveIndex < totalMoves; moveIndex++) {
+        int startAddress = moveIndex * bytesPerMove;
+        for (int i = 0; i < 6; i++) {
+            EEPROM.write(startAddress + i, 0);
+        }
+    }
+}
+////////////////////////////////////////////////////////////////////////////////////
+
 /////////////////// Function to start recording servo movements///////////////////////////
 void StartRecordingMovements() {
     isRecord = true;
     indexRecord = 0;
 
-    // Initialize movesServos with current servo angles 
-    //the movesServos array is filled with the current angles of each servo. 
-    //This way, if you don't move a particular servo during a recording, it retains its initial angle 
+    // Initialize movesServos with current servo angles
     for (int i = 0; i < servoNumber; i++) {
         for (int j = 0; j < moveCount; j++) {
             movesServos[j][i] = servoAngles[i];
@@ -130,62 +167,69 @@ void StartRecordingMovements() {
 }
 
 
+
 /////////////////// Function to stop recording servo movements////////////////////////////////
 void StopRecordingMovements() {
-    isRecord = false;
+    
     Serial.println("Recording stopped. Final recorded moves:");
-    bt1.println("Recording stopped. Final recorded moves:");  // Added
+    bt1.println("Recording stopped. Final recorded moves:");
+
+     isRecord = false;
+    EEPROM.write(0, indexRecord); // Store indexRecord at the beginning of EEPROM
+
+    // Other code for storing servo movements in EEPROM
+    // Adjust address calculation to account for the first byte being used
     for (int i = 0; i < indexRecord; i++) {
-        Serial.print("Move "); Serial.print(i); Serial.println(":");
-        bt1.print("Move "); bt1.print(i); bt1.println(":");  // Added
         for (int j = 0; j < servoNumber; j++) {
-            Serial.print("Servo "); Serial.print(j + 1);
-            Serial.print(": Angle "); Serial.println(movesServos[i][j]);
-            bt1.print("Servo "); bt1.print(j + 1);  // Added
-            bt1.print(": Angle "); bt1.println(movesServos[i][j]);  // Added
+            int eepromAddress = 1 + i * servoNumber + j; // Start from address 1
+            EEPROM.write(eepromAddress, movesServos[i][j]);
         }
     }
     lcd.clear();
-    lcd.print("Recorded Moves:"); // Show how many moves were recorded
+    lcd.print("Recorded Moves:");
     lcd.setCursor(0, 1);
     lcd.print(indexRecord);
 }
 
+
 /////////////////////Function to play back recorded movements///////////////////////////
 void PlayRecordedMovements() {
     Serial.println("Starting playback...");
-    bt1.println("Starting playback...");  // Added
+    bt1.println("Starting playback...");
     lcd.clear();
-    lcd.print("Playing Moves..."); // Indicate playback on the LCD
+    lcd.print("Playing Moves...");
     isPlay = true;
+
     for (int i = 0; i < indexRecord; i++) {
         Serial.print("Move: "); Serial.println(i);
-        bt1.print("Move: "); bt1.println(i);  // Added
+        bt1.print("Move: "); bt1.println(i);
         for (int j = 0; j < servoNumber; j++) {
-            int pulse = pulseWidth(movesServos[i][j]);
-            Serial.print("Servo "); Serial.print(j + 1); 
-            Serial.print(" Angle: "); Serial.print(movesServos[i][j]);
+            int eepromAddress = 1 + i * servoNumber + j; // Adjusted address
+            int angle = EEPROM.read(eepromAddress);
+            int pulse = pulseWidth(angle);
+            Serial.print("Servo "); Serial.print(j + 1);
+            Serial.print(" Angle: "); Serial.print(angle);
             Serial.print(" Pulse Width: "); Serial.println(pulse);
-            bt1.print("Servo "); bt1.print(j + 1);  // Added
-            bt1.print(" Angle: "); bt1.print(movesServos[i][j]);  // Added
-            bt1.print(" Pulse Width: "); bt1.println(pulse);  // Added
-            moveServo(j + 1, movesServos[i][j]);
+            bt1.print("Servo "); bt1.print(j + 1);
+            bt1.print(" Angle: "); bt1.print(angle);
+            bt1.print(" Pulse Width: "); bt1.println(pulse);
+            moveServo(j + 1, angle);
         }
-        delay(1000);  // Delay between moves, adjust as needed
+        delay(1000); // Delay between moves, adjust as needed
     }
+
     for (int i = 0; i < indexRecord; i++) {
         lcd.setCursor(0, 1);
         lcd.print("Move: ");
-        lcd.print(i + 1); // Update the move number on the LCD
-        // ... rest of the playback code
+        lcd.print(i + 1);
     }
 
     isPlay = false;
     Serial.println("Playback completed.");
-    bt1.println("Playback completed.");  // Added
-    lcd.clear();
-    lcd.print("Playback done."); // Indicate playback is done
+    bt1.println("Playback completed.");
 }
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Function to print the pulse widths for the current angles
 void printServoPulseWidths() {
@@ -340,7 +384,19 @@ void executeCommand(String command) {
     //     MoveToPick();
     //     Serial.println("Executing MoveToPick sequence");
     // } else 
-    if (command == "PLAY_MOVEMENTS") {
+      if (command.startsWith("DELETE_MOVE")) {
+        int spaceIndex = command.indexOf(' ');
+        if (spaceIndex != -1) {
+            int moveIndex = command.substring(spaceIndex + 1).toInt();
+            DeleteRecordedMoves(moveIndex);
+            Serial.println("Move " + String(moveIndex) + " deleted.");
+        } else {
+            Serial.println("Invalid command format.");
+        }
+    } else if (command == "DELETE_ALL_MOVES") {
+        DeleteAllMoves();
+        Serial.println("All moves deleted.");
+    } else if (command == "PLAY_MOVEMENTS") {
         waitingForConfirmation = true;
         Serial.println("Are you sure you want to play movements? (YES/NO)");
         bt1.println("Are you sure you want to play movements? (YES/NO)"); // Send confirmation request over Bluetooth
