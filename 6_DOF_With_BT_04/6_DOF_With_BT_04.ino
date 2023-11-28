@@ -34,7 +34,7 @@ const int greenLEDPin = 3;   // Green LED on digital pin D3
 const int yellowLEDPin = 4;  // Yellow LED on digital pin D4
 const int redLEDPin = 5;     // Red LED on digital pin D5
 
-int servoAngles[6] = {100, 90, 110, 95, 180, 0}; // Initial angles for each servo
+int servoAngles[6] = {100, 90, 110, 95, 180, 10}; // Initial angles for each servo
 int movesServos[moveCount][servoNumber]; //max of 10 moves
 // Global variable to track state
 bool waitingForConfirmation = false; // safety check, stop user from acidently runing the squence when not ready
@@ -324,7 +324,7 @@ void MoveToStart() {
     servoAngles[2] = 10;  //SHOUDLER servo
     servoAngles[3] = 95;  //ELBOW servo
     servoAngles[4] = 180; //WRIST servo
-    servoAngles[5] = 0;   //CLAW servo
+    servoAngles[5] = 10;   //CLAW servo
 
     // Use a loop to set each servo to its start position using moveServo
    
