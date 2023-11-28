@@ -116,12 +116,12 @@ void loop() {
     digitalWrite(yellowLEDPin, HIGH);
     digitalWrite(redLEDPin, LOW);
   } else {
-    // Turn the Green LED on and others off
+    // Turn the Green LED on and s off
     digitalWrite(greenLEDPin, HIGH);
     digitalWrite(yellowLEDPin, LOW);
     digitalWrite(redLEDPin, LOW);
   }
-  if (isplay) {
+  if (isPlay) {
     // Turn the RED LED on and others off
     digitalWrite(greenLEDPin, LOW);
     digitalWrite(yellowLEDPin, LOW);
