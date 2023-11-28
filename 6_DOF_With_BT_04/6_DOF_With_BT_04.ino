@@ -29,7 +29,10 @@ const float FREQUENCY_SCALE = (float)FREQUENCY * 4096 / 1000000;
  const int servoNumber = 6;
 const int totalMoves = 20;  // Adjust as needed
 const int bytesPerMove = 6;  // Assuming each move takes up 6 bytes
-
+// Define the LED pins
+const int greenLEDPin = 3;   // Green LED on digital pin D3
+const int yellowLEDPin = 4;  // Yellow LED on digital pin D4
+const int redLEDPin = 5;     // Red LED on digital pin D5
 
 int servoAngles[6] = {100, 90, 110, 95, 180, 0}; // Initial angles for each servo
 int movesServos[moveCount][servoNumber]; //max of 10 moves
@@ -59,6 +62,11 @@ void DeleteAllMoves();
 void setup() {
     Serial.begin(9600);
     bt1.begin(9600);
+
+     // Initialize the LED pins as outputs
+     pinMode(greenLEDPin, OUTPUT);
+     pinMode(yellowLEDPin, OUTPUT);
+     pinMode(redLEDPin, OUTPUT);
 
     // Initialize LCD display
     lcd.init();
@@ -101,6 +109,12 @@ void setup() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Main loop
 void loop() {
+
+  // Turn the green LED on and others off
+    digitalWrite(greenLEDPin, HIGH);
+    digitalWrite(yellowLEDPin, LOW);
+    digitalWrite(redLEDPin, LOW);
+
     String command = "";
 
     if (Serial.available() || bt1.available()) {
