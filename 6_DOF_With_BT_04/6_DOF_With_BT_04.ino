@@ -110,10 +110,25 @@ void setup() {
 // Main loop
 void loop() {
 
-  // Turn the green LED on and others off
+  if (isRecord) {
+    // Turn the yellow LED on and others off
+    digitalWrite(greenLEDPin, LOW);
+    digitalWrite(yellowLEDPin, HIGH);
+    digitalWrite(redLEDPin, LOW);
+  } else {
+    // Turn the Green LED on and others off
     digitalWrite(greenLEDPin, HIGH);
     digitalWrite(yellowLEDPin, LOW);
     digitalWrite(redLEDPin, LOW);
+  }
+  if (isplay) {
+    // Turn the RED LED on and others off
+    digitalWrite(greenLEDPin, LOW);
+    digitalWrite(yellowLEDPin, LOW);
+    digitalWrite(redLEDPin, HIGH);
+  } 
+
+
 
     String command = "";
 
@@ -166,6 +181,7 @@ void DeleteAllMoves() {
 void StartRecordingMovements() {
     isRecord = true;
     indexRecord = 0;
+    
 
     // Initialize movesServos with current servo angles
     for (int i = 0; i < servoNumber; i++) {
@@ -241,6 +257,11 @@ void PlayRecordedMovements() {
     isPlay = false;
     Serial.println("Playback completed.");
     bt1.println("Playback completed.");
+
+    // Turn the RED LED on and others off
+    digitalWrite(greenLEDPin, LOW);
+    digitalWrite(yellowLEDPin, LOW);
+    digitalWrite(redLEDPin, HIGH);
 }
 
 
