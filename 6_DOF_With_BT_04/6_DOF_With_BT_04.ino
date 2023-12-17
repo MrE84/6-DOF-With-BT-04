@@ -406,12 +406,12 @@ void executeCommand(String command) {
     };
 
     ServoCommand commands[] = {
-        {"HIP ", 1},
-        {"WAIST ", 2},
-        {"SHOULDER ", 3},
-        {"ELBOW ", 4},
-        {"WRIST ", 5},
-        {"CLAW ", 6}
+        {"HIP ", 1}, // BASE
+        {"WAIST ", 2},//SHOULDER
+        {"SHOULDER ", 3},//ELBOW
+        {"ELBOW ", 4},//WRIST
+        {"WRIST ", 5},//WRISTR
+        {"CLAW ", 6}//gRIPPER
     };
 
     // Check for special commands first
