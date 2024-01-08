@@ -269,7 +269,8 @@ void PlayRecordedMovements() {
 // Function to print the pulse widths for the current angles
 void printServoPulseWidths() {
     for (int i = 0; i < 6; i++) {
-        int currentPulseWidth = pulseWidth(servoAngles[i]);
+      int currentPulseWidth = pulseWidth(servoAngles[i]);
+        movesServos[indexRecord][i] = servoAngles[i]; // Store current angles in movesServos at indexRecord
         Serial.print("Servo ");
         Serial.print(i);
         Serial.print(" Angle: ");
@@ -462,8 +463,9 @@ void executeCommand(String command) {
     } else if (command == "PLAY_MOVEMENTS") {
         PlayRecordedMovements();
     } else if (command == "SAVE_MOVE") {  // New command to increment indexRecord
-        if (isRecord && indexRecord < moveCount - 1) {
-            indexRecord++;  // Increment the record index
+         if (isRecord && indexRecord < moveCount - 1) {
+        printServoPulseWidths(); // Store servo angles in the current indexRecord in movesServos
+        indexRecord++;  // Increment the record index
             Serial.print("Move saved at index ");
             Serial.println(indexRecord);
             bt1.print("Move saved at index "); // Adding Bluetooth print
